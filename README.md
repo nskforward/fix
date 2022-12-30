@@ -1,2 +1,2 @@
 # fix
-FIX protocol implementation for Golang
+FIX protocol for Golang
