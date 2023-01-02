@@ -12,19 +12,6 @@ func (m *MapStrings) Get(field int) []string {
 	return m.fields[field]
 }
 
-func (m *MapStrings) GetAndRemove(field int) []string {
-	if m.fields == nil {
-		return nil
-	}
-	v, ok := m.fields[field]
-	if !ok {
-		return nil
-	}
-	delete(m.fields, field)
-	m.keys.Remove(field)
-	return v
-}
-
 func (m *MapStrings) Set(field int, value string) {
 	if m.fields == nil {
 		m.fields = map[int][]string{field: {value}}

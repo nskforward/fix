@@ -1,50 +1,52 @@
 package test
 
 import (
-	"fmt"
 	"github.com/nskforward/fix"
-	"os"
 	"testing"
+	"time"
 )
 
 func TestSession(t *testing.T) {
-	addr := os.Getenv("FIX_ADDR")
-	if addr == "" {
-		t.Fatal("env FIX_ADDR is empty")
-	}
-
-	sender := os.Getenv("FIX_SENDER")
-	if sender == "" {
-		t.Fatal("env FIX_SENDER is empty")
-	}
-
-	target := os.Getenv("FIX_TARGET")
-	if target == "" {
-		t.Fatal("env FIX_TARGET is empty")
-	}
-
-	pass := os.Getenv("FIX_PASS")
-	if pass == "" {
-		t.Fatal("env FIX_PASS is empty")
-	}
-
-	sess, err := fix.NewSession(addr, sender, target, pass)
+	sess, err := session()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	msgLogin := sess.BuildLoginMessage()
-	err = sess.Send(msgLogin)
+	// LOGON
+	msg := fix.NewMessageLogon(sess, time.Minute, true)
+	resp, err := send(sess, msg)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println("[debug] -->", string(fix.Dump(msgLogin.Marshal(), '|')))
-	sess.Free(msgLogin)
+	if resp.GetMsgType() != "A" {
+		t.Fatal("response message must be type A")
+	}
+	sess.FreeMessage(resp)
 
-	msg, err := sess.Read()
+	// HEARTBEAT
+	msg = fix.NewMessageTest(sess, "heartbeat")
+	resp, err = send(sess, msg)
 	if err != nil {
 		t.Fatal(err)
 	}
+	if resp.GetMsgType() != "0" {
+		t.Fatal("response message must be type 0")
+	}
+	if resp.GetFieldValues(112)[0] != "heartbeat" {
+		t.Fatal("heartbeat response field 112 must contain value 'heartbeat', got:", resp.GetFieldValues(112)[0])
+	}
+	sess.FreeMessage(resp)
 
-	fmt.Println("[debug] <--", string(fix.Dump(msg.Marshal(), '|')))
+	// LOGOUT
+	msg = fix.NewMessageLogout(sess)
+	resp, err = send(sess, msg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.GetMsgType() != "5" {
+		t.Fatal("response message must be type 5")
+	}
+	sess.FreeMessage(resp)
+
+	sess.Close()
 }

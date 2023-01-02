@@ -17,18 +17,17 @@ func TestMapStrings(t *testing.T) {
 	m.Set(3, "3")
 	m.Set(2, "2")
 	m.Set(1, "1")
+	m.Set(6, "6")
 
 	var buf bytes.Buffer
-	buf.WriteString(m.GetAndRemove(3)[0])
-	buf.WriteString(m.GetAndRemove(4)[0])
-	buf.WriteString(m.GetAndRemove(5)[0])
-
-	m.Range(func(field int, value []string) bool {
-		buf.WriteString(value[0])
+	m.Range(func(field int, values []string) bool {
+		for _, v := range values {
+			buf.WriteString(v)
+		}
 		return true
 	})
 
-	if !bytes.Equal(buf.Bytes(), []byte("345126789")) {
-		t.Fatal("want 345126789, got", buf.String())
+	if !bytes.Equal(buf.Bytes(), []byte("9876654321")) {
+		t.Fatalf("unexpected result:\nwnt: 9876654321\ngot: %s", buf.String())
 	}
 }
