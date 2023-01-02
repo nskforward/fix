@@ -8,4 +8,6 @@
 
 
 # FIX
-Protocol implementation for Golang
+FIX protocol implementation for Golang
+
+Support FIX version 4.4
